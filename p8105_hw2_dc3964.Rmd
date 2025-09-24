@@ -1,0 +1,34 @@
+---
+title: "p8105_hw2_dc3964"
+author: "Rene Chi"
+date: "2025-09-24"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1
+
+TBD
+
+```{r}
+#TBD
+```
+
+## Problem 2
+
+TBD
+
+```{r}
+#TBD
+```
+
+## Problem 3
+
+TBD
+
+```{r}
+#TBD
+```
