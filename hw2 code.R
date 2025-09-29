@@ -39,3 +39,6 @@ unemployment =
 ### Merging all datasets
 partial_complete = left_join(pols_month, snp) 
 complete_data_p1 = left_join(partial_complete, unemployment)
+
+
+## Problem 2
