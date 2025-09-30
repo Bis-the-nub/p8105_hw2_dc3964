@@ -5,18 +5,17 @@ date: "2025-09-24"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r, message = FALSE}
+### loading packages
+library(tidyverse)
+library(lubridate)
+library(readxl)
 ```
 
 ## Problem 1
 
 ```{r, message = FALSE}
 ## Problem 1
-### loading packages
-library(tidyverse)
-library(lubridate)
-
 ### tidying pol-month
 pols_month =
   read_csv("./data/pols-month.csv") |> 
@@ -52,24 +51,75 @@ unemployment =
 
 ### Merging all datasets
 partial_complete = left_join(pols_month, snp) 
-complete_data_p1 = inner_join(partial_complete, unemployment)
+complete_data_p1 = left_join(partial_complete, unemployment)
 ```
 
-Pols-month has 822 rows and 9 variables, with the years ranged from 1947 to 2015. Key variables being year and month for future data merge.
+### **Data description**
 
-Snp has 787 rows and 3 variables, with the years ranged from 1950 to 2015. Key variables being year and month for future data merge.
+Pols-month has 822 rows and 9 variables, with the years ranged from 1947 to 2015. Key variables being year and month for data merging.
 
-Unemployment has 816 rows and 3 variables, with the years ranged from 1948 to 2015. Key variables being year and month for future data merge.
+Snp has 787 rows and 3 variables, with the years ranged from 1950 to 2015. Key variables being year and month for data merging.
+
+Unemployment has 816 rows and 3 variables, with the years ranged from 1948 to 2015. Key variables being year and month for data merging.
 
 The merged data set has 822 rows and 11 columns, with the years ranged from 1947 to 2015. Key variables being year and month as I used them to merge all of the data sets.
 
 ## Problem 2
 
-TBD
+```{r, message = FALSE, results = 'hide'}
+## Problem 2
+mr_trashwheel =
+  read_excel("./data/202409 Trash Wheel Collection Data.xlsx",
+             sheet = "Mr. Trash Wheel") |> 
+  janitor::clean_names() |> 
+  select(-x15,-x16, -dumpster) |> 
+  slice(1:(n() - 2)) |> 
+  mutate(sports_balls = as.integer(round(sports_balls))) |>
+  mutate(wheel_tag = "mr")
 
-```{r}
-#TBD
+professor_trashwheel =
+  read_excel("./data/202409 Trash Wheel Collection Data.xlsx",
+             sheet = "Professor Trash Wheel") |> 
+  janitor::clean_names() |>
+  select(-dumpster) |> 
+  slice(1:(n() - 3)) |> 
+  mutate(year = as.character(year)) |> 
+  mutate(wheel_tag = "professor")
+
+gwynnda_trashwheel =
+  read_excel("./data/202409 Trash Wheel Collection Data.xlsx",
+             sheet = "Gwynnda Trash Wheel") |> 
+  janitor::clean_names() |>
+  select(-dumpster) |> 
+  slice(1:(n() - 1)) |> 
+  mutate(year = as.character(year)) |> 
+  mutate(wheel_tag = "gwynnda")
+
+partial_complete_p2 = full_join(mr_trashwheel, professor_trashwheel)
+complete_data_p2 = full_join(partial_complete_p2, gwynnda_trashwheel)
+
+### Total weight of trash collected by Professor Trash Wheel
+complete_data_p2 |> 
+  filter(wheel_tag == "mr") |>   
+  pull(weight_tons) |>                   
+  sum()      
+
+### Total number of cigarette butts collected by Gwynnda in June of 2022
+complete_data_p2 |> 
+  filter(wheel_tag == "gwynnda", month == "June", year == "2022") |>   
+  pull(cigarette_butts) |>                   
+  sum()
 ```
+
+### **Data description**
+
+`r "mr_trashwheel"` has `r nrow(mr_trashwheel)` rows and `r ncol(mr_trashwheel)` variables, with the years ranged from 2014 to 2024. Key variables being the wheel tag as it is the column to distinguish different trash wheels.
+
+`r "professor_trashwheel"` has `r nrow(professor_trashwheel)` rows and `r ncol(professor_trashwheel)` variables, with the years ranged from 2017 to 2024. Key variables being the wheel tag as it is the column to distinguish different trash wheels.
+
+`r "gwynnda_trashwheel"` has `r nrow(gwynnda_trashwheel)` rows and `r ncol(gwynnda_trashwheel)` variables, with the years ranged from 2021 to 2024. Key variables being the wheel tag as it is the column to distinguish different trash wheels.
+
+The total weight of trash collected by Professor Trash Wheel is `r complete_data_p2 |> filter(wheel_tag == "mr") |> pull(weight_tons) |> sum()` tons. Meanwhile, the total number of cigarette butts collected by Gwynnda in June of 2022 is `r format(complete_data_p2 |> filter(wheel_tag == "gwynnda", month == "June", year == "2022") |> pull(cigarette_butts) |> sum(), big.mark = ",", scientific = FALSE) `
 
 ## Problem 3
 
