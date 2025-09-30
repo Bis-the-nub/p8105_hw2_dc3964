@@ -38,7 +38,7 @@ unemployment =
   pivot_longer(Jan:Dec, names_to = "month", values_to = "unemployment_rate")
 
 ### Merging all datasets
-partial_complete = left_join(pols_month, snp) 
+partial_complete_p1 = left_join(pols_month, snp) 
 complete_data_p1 = left_join(partial_complete, unemployment)
 
 
@@ -49,7 +49,7 @@ mr_trashwheel =
   janitor::clean_names() |> 
   select(-x15,-x16, -dumpster) |> 
   slice(1:(n() - 2)) |> 
-  mutate(sports_balls = as.integer(round(sports_balls))) |> 
+  mutate(sports_balls = as.integer(round(sports_balls))) |>
   mutate(wheel_tag = "mr")
 
 professor_trashwheel =
@@ -58,6 +58,7 @@ professor_trashwheel =
   janitor::clean_names() |>
   select(-dumpster) |> 
   slice(1:(n() - 3)) |> 
+  mutate(year = as.character(year)) |> 
   mutate(wheel_tag = "professor")
 
 gwynnda_trashwheel =
@@ -66,8 +67,20 @@ gwynnda_trashwheel =
   janitor::clean_names() |>
   select(-dumpster) |> 
   slice(1:(n() - 1)) |> 
+  mutate(year = as.character(year)) |> 
   mutate(wheel_tag = "gwynnda")
 
+partial_complete_p2 = full_join(mr_trashwheel, professor_trashwheel)
+complete_data_p2 = full_join(partial_complete_p2, gwynnda_trashwheel)
 
+### Total weight of trash collected by Professor Trash Wheel
+complete_data_p2 |> 
+  filter(wheel_tag == "mr") |>   
+  pull(weight_tons) |>                   
+  sum()      
 
-  
+### Total number of cigarette butts collected by Gwynnda in June of 2022
+complete_data_p2 |> 
+  filter(wheel_tag == "gwynnda", month == "June", year == "2022") |>   
+  pull(cigarette_butts) |>                   
+  sum()
