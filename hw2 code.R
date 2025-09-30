@@ -83,4 +83,24 @@ complete_data_p2 |>
 complete_data_p2 |> 
   filter(wheel_tag == "gwynnda", month == "June", year == "2022") |>   
   pull(cigarette_butts) |>                   
-  sum()
+  sum() ## note that in the rmd file I changed the code a bit
+        ## just to get rid of scientific symbol
+
+## Problem 3
+zip_codes = 
+  read_csv("./data/Zip Codes.csv") |> 
+  janitor::clean_names()
+
+zip_zillow =
+  read_csv("./data/Zip_zori_uc_sfrcondomfr_sm_month_NYC.csv") |>
+  pivot_longer(
+    cols = matches("^\\d{4}-\\d{1,2}-\\d{1,2}$"), 
+    names_to = "date",
+    values_to = "value"
+  ) |> 
+  janitor::clean_names() |> 
+  rename(zip_code = region_name)
+
+complete_data_p3 = left_join(zip_zillow, zip_codes) |> 
+  select(zip_code, county_name, date, value, everything())
+
