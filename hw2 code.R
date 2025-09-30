@@ -2,6 +2,7 @@
 ### loading packages
 library(tidyverse)
 library(lubridate)
+library(readxl)
 
 ### tidying pol-month
 pols_month =
@@ -42,3 +43,31 @@ complete_data_p1 = left_join(partial_complete, unemployment)
 
 
 ## Problem 2
+mr_trashwheel =
+  read_excel("./data/202409 Trash Wheel Collection Data.xlsx",
+             sheet = "Mr. Trash Wheel") |> 
+  janitor::clean_names() |> 
+  select(-x15,-x16, -dumpster) |> 
+  slice(1:(n() - 2)) |> 
+  mutate(sports_balls = as.integer(round(sports_balls))) |> 
+  mutate(wheel_tag = "mr")
+
+professor_trashwheel =
+  read_excel("./data/202409 Trash Wheel Collection Data.xlsx",
+             sheet = "Professor Trash Wheel") |> 
+  janitor::clean_names() |>
+  select(-dumpster) |> 
+  slice(1:(n() - 3)) |> 
+  mutate(wheel_tag = "professor")
+
+gwynnda_trashwheel =
+  read_excel("./data/202409 Trash Wheel Collection Data.xlsx",
+             sheet = "Gwynnda Trash Wheel") |> 
+  janitor::clean_names() |>
+  select(-dumpster) |> 
+  slice(1:(n() - 1)) |> 
+  mutate(wheel_tag = "gwynnda")
+
+
+
+  
