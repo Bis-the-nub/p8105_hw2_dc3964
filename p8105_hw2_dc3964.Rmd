@@ -34,13 +34,16 @@ snp =
   separate(date, c("month", "day", "year")) |> 
   select(year, month, everything()) |> 
   select(-day) |> 
-  mutate(month = month.abb[as.integer(month)]) |> 
+  mutate(across(c(month:year), as.integer)) |> 
+  mutate(month = factor(month.name[month], levels = month.name)) |> 
   ## changed format from 2 digit to 4 digit 
   mutate(year = if_else(as.integer(year) <= 15,
                           2000 + as.integer(year),
                           1900 + as.integer(year))) |> 
   ## changed format from integer to character
-  mutate(year = as.character(year))
+  mutate(year = as.character(year)) |> 
+  select(year, month, everything()) |> 
+  arrange(year, month)
 
 ### tidying unemployment
 unemployment =
@@ -50,8 +53,8 @@ unemployment =
   pivot_longer(Jan:Dec, names_to = "month", values_to = "unemployment_rate")
 
 ### Merging all datasets
-partial_complete = left_join(pols_month, snp) 
-complete_data_p1 = left_join(partial_complete, unemployment)
+partial_complete_p1 = left_join(pols_month, snp) 
+complete_data_p1 = left_join(partial_complete_p1, unemployment)
 ```
 
 ### **Data description**
@@ -67,40 +70,46 @@ The merged data set has 822 rows and 11 columns, with the years ranged from 1947
 ## Problem 2
 
 ```{r, message = FALSE, results = 'hide'}
-## Problem 2
 mr_trashwheel =
-  read_excel("./data/202409 Trash Wheel Collection Data.xlsx",
-             sheet = "Mr. Trash Wheel") |> 
+  read_excel("./data/202509 Trash Wheel Collection Data.xlsx",
+             sheet = "Mr. Trash Wheel",
+             range = "A2:N710",
+             na = c("")
+             ) |> 
   janitor::clean_names() |> 
-  select(-x15,-x16, -dumpster) |> 
-  slice(1:(n() - 2)) |> 
+  filter(!is.na(dumpster)) |> 
   mutate(sports_balls = as.integer(round(sports_balls))) |>
   mutate(wheel_tag = "mr")
 
 professor_trashwheel =
-  read_excel("./data/202409 Trash Wheel Collection Data.xlsx",
-             sheet = "Professor Trash Wheel") |> 
+  read_excel("./data/202509 Trash Wheel Collection Data.xlsx",
+             sheet = "Professor Trash Wheel",
+             range = "A2:M135", 
+             na = c("")
+             ) |> 
   janitor::clean_names() |>
-  select(-dumpster) |> 
-  slice(1:(n() - 3)) |> 
+  filter(!is.na(dumpster)) |> 
   mutate(year = as.character(year)) |> 
   mutate(wheel_tag = "professor")
 
 gwynnda_trashwheel =
-  read_excel("./data/202409 Trash Wheel Collection Data.xlsx",
-             sheet = "Gwynnda Trash Wheel") |> 
+  read_excel("./data/202509 Trash Wheel Collection Data.xlsx",
+             sheet = "Gwynns Falls Trash Wheel",
+             range = "A2:L352",
+             na = c("")
+             ) |> 
   janitor::clean_names() |>
-  select(-dumpster) |> 
-  slice(1:(n() - 1)) |> 
+  filter(!is.na(dumpster)) |> 
   mutate(year = as.character(year)) |> 
   mutate(wheel_tag = "gwynnda")
 
 partial_complete_p2 = full_join(mr_trashwheel, professor_trashwheel)
-complete_data_p2 = full_join(partial_complete_p2, gwynnda_trashwheel)
+complete_data_p2 = full_join(partial_complete_p2, gwynnda_trashwheel) |> 
+  select(wheel_tag, everything())
 
 ### Total weight of trash collected by Professor Trash Wheel
 complete_data_p2 |> 
-  filter(wheel_tag == "mr") |>   
+  filter(wheel_tag == "professor") |>   
   pull(weight_tons) |>                   
   sum()      
 
@@ -108,7 +117,8 @@ complete_data_p2 |>
 complete_data_p2 |> 
   filter(wheel_tag == "gwynnda", month == "June", year == "2022") |>   
   pull(cigarette_butts) |>                   
-  sum()
+  sum() ## note that in the rmd file I changed the code a bit
+        ## just to get rid of scientific symbol
 ```
 
 ### **Data description**
@@ -119,12 +129,61 @@ complete_data_p2 |>
 
 `r "gwynnda_trashwheel"` has `r nrow(gwynnda_trashwheel)` rows and `r ncol(gwynnda_trashwheel)` variables, with the years ranged from 2021 to 2024. Key variables being the wheel tag as it is the column to distinguish different trash wheels.
 
-The total weight of trash collected by Professor Trash Wheel is `r complete_data_p2 |> filter(wheel_tag == "mr") |> pull(weight_tons) |> sum()` tons. Meanwhile, the total number of cigarette butts collected by Gwynnda in June of 2022 is `r format(complete_data_p2 |> filter(wheel_tag == "gwynnda", month == "June", year == "2022") |> pull(cigarette_butts) |> sum(), big.mark = ",", scientific = FALSE) `
+`r "complete_data_p2"` has `r nrow(complete_data_p2)` observations and `r ncol(complete_data_p2)` variables, with the years ranged from 2014 to 2025. Key variables being the wheel tag as it is the column to distinguish different trash wheels.
+
+The total weight of trash collected by Professor Trash Wheel is `r complete_data_p2 |> filter(wheel_tag == "professor") |> pull(weight_tons) |> sum()` tons. Meanwhile, the total number of cigarette butts collected by Gwynnda in June of 2022 is `r format(complete_data_p2 |> filter(wheel_tag == "gwynnda", month == "June", year == "2022") |> pull(cigarette_butts) |> sum(), big.mark = ",", scientific = FALSE) `
 
 ## Problem 3
 
-TBD
+```{r, message = FALSE}
+## Problem 3
+zip_codes = 
+  read_csv("./data/Zip Codes.csv") |> 
+  janitor::clean_names()
+
+zip_zillow =
+  read_csv("./data/Zip_zori_uc_sfrcondomfr_sm_month_NYC.csv") |>
+  pivot_longer(
+    cols = matches("^\\d{4}-\\d{1,2}-\\d{1,2}$"), 
+    names_to = "date",
+    values_to = "zori"
+  ) |> 
+  janitor::clean_names() |> 
+  rename(zip_code = region_name)
+
+complete_data_p3 = left_join(zip_codes, zip_zillow,
+                             relationship = "many-to-many") |> 
+  select(zip_code, county_name, date, zori, everything())
+```
+
+The observation number for the merged data set is `r nrow(complete_data_p3)`, with `r length(unique(complete_data_p3$zip_code))` unique zip codes and `r length(unique(complete_data_p3$neighborhood))` unique neighborhoods.
 
 ```{r}
-#TBD
+unique_zips =
+  anti_join(zip_codes, zip_zillow, by = "zip_code") |>
+  arrange(zip_code)
 ```
+
+There are `r nrow(unique_zips)` zip codes appear in the ZIP code data set but not in the Zillow Rental Price data set. I believe the main reason is, the zip codes not included in the zillow rental price data set might be inside a commercial or an industrial area.
+
+```{r}
+covid_19 =
+  complete_data_p3 |> 
+  select(zip_code, date, zori, county, neighborhood) |> 
+  filter(date %in% c("2020-01-31", "2021-01-31")) |> 
+  pivot_wider(
+    names_from = date,
+    values_from = zori,
+    names_prefix = "zori_"
+ ) |> 
+  mutate(
+    drop = `zori_2020-01-31` - `zori_2021-01-31`
+  ) |> 
+  arrange(desc(drop)) |> 
+  slice(1:10)
+
+knitr::kable(covid_19)
+```
+
+
+
