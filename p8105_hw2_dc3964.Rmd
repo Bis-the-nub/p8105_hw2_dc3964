@@ -185,5 +185,4 @@ covid_19 =
 knitr::kable(covid_19)
 ```
 
-
-
+According to the table, we can see that compared with a year ago, these ten regions have experienced major decline in zori values. Coincidentally, the COVID-19 pandemic was affecting the US heavily. Therefore, we can conclude that the COVID-19 pandemic was one of significant factors that caused the decrease of zori values within a year.
