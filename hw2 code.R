@@ -1,7 +1,6 @@
 ## Problem 1
 ### loading packages
 library(tidyverse)
-library(lubridate)
 library(readxl)
 
 ### tidying pol-month
@@ -46,6 +45,7 @@ complete_data_p1 = left_join(partial_complete_p1, unemployment)
 
 
 ## Problem 2
+### Loading and tidying three trash wheels
 mr_trashwheel =
   read_excel("./data/202509 Trash Wheel Collection Data.xlsx",
              sheet = "Mr. Trash Wheel",
@@ -79,6 +79,7 @@ gwynnda_trashwheel =
   mutate(year = as.character(year)) |> 
   mutate(wheel_tag = "gwynnda")
 
+### Merging data
 partial_complete_p2 = full_join(mr_trashwheel, professor_trashwheel)
 complete_data_p2 = full_join(partial_complete_p2, gwynnda_trashwheel) |> 
   select(wheel_tag, everything())
@@ -97,6 +98,7 @@ complete_data_p2 |>
         ## just to get rid of scientific symbol
 
 ## Problem 3
+### Loading and tidying data
 zip_codes = 
   read_csv("./data/Zip Codes.csv") |> 
   janitor::clean_names()
@@ -111,14 +113,17 @@ zip_zillow =
   janitor::clean_names() |> 
   rename(zip_code = region_name)
 
+### Merging data
 complete_data_p3 = left_join(zip_codes, zip_zillow, 
                              relationship = "many-to-many") |> 
   select(zip_code, county_name, date, zori, everything())
 
+### calculating unique zip codes
 unique_zips =
-  anti_join(zip_codes, zip_zillow, by = "zip_code")|>
+  anti_join(zip_codes, zip_zillow, by = "zip_code") |>
   arrange(zip_code)
 
+### forming the table between different zori date values
 covid_19 =
   complete_data_p3 |> 
   select(zip_code, date, zori, county, neighborhood) |> 
